@@ -85,8 +85,8 @@ Each entry in the log file is collected as it's created and sent to the specifie
 |:---|:---|:---|:---|
 | `TimeGenerated` | datetime | Yes | This column contains the time the record was generated and is required in all tables. This value will be automatically populated with the time the record is added to the Log Analytics workspace. You can override this value using a transformation to set `TimeGenerated` to a value from the log entry. |
 | `RawData` | string | Yes<sup>1</sup> | The entire log entry in a single column. You can use a transformation if you want to break down this data into multiple columns before sending to the table. |
-| `Computer` | string | No | If the table includes this column, it will be populated with the name of the computer the log entry was collected from. |
-| `FilePath` | string | No | If the table includes this column, it will be populated with the path to the log file the log entry was collected from. |
+| `Computer` | string | No | If the table includes this column, it will be populated with the name of the computer the log entry was collected from. Make sure to include in the transformation to populate in destination table.|
+| `FilePath` | string | No | If the table includes this column, it will be populated with the path to the log file the log entry was collected from. Make sure to include in the transformation to populate in destination table.|
 
 <sup>1</sup> The table doesn't have to include a `RawData` column if you use a transformation to parse the data into multiple columns. 
 
@@ -160,10 +160,11 @@ Notable details of the transformation query include the following:
 
 - The query outputs properties that each match a column name in the target table. 
 - This example renames the `Time` property in the log file so that this value is used for `TimeGenerated`. If this was not provided, then `TimeGenerated` would be populated with the ingestion time.
-- Because `split` returns dynamic data, you must use functions such as `tostring` and `toint` to convert the data to the correct scalar type. 
+- Because `split` returns dynamic data, you must use functions such as `tostring` and `toint` to convert the data to the correct scalar type.
+- Computer and FilePath are not automatically populated in desitnation table unless explicitly referenced.
 
 ```kusto
-source | project d = split(RawData,",") | project TimeGenerated=todatetime(d[0]), Code=toint(d[1]), Severity=tostring(d[2]), Module=tostring(d[3]), Message=tostring(d[4])
+source | project Computer, FilePath, d = split(RawData,",") | project Computer, FilePath, TimeGenerated=todatetime(d[0]), Code=toint(d[1]), Severity=tostring(d[2]), Module=tostring(d[3]), Message=tostring(d[4])
 ```
 
 :::image type="content" source="media/data-collection-log-text/delimited-configuration.png" lightbox="media/data-collection-log-text/delimited-configuration.png" alt-text="Screenshot that shows configuration of comma-delimited file collection.":::
